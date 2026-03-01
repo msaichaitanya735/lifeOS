@@ -35,8 +35,10 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     tag: payload.tag,
   })
 
+  type SubRow = { endpoint: string; p256dh: string; auth: string }
+
   const results = await Promise.allSettled(
-    subs.map((sub) =>
+    (subs as SubRow[]).map((sub) =>
       webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
         notification
@@ -52,7 +54,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
       const err = result.reason as { statusCode?: number }
       // 410 Gone = subscription expired
       if (err?.statusCode === 410 || err?.statusCode === 404) {
-        staleEndpoints.push(subs[i].endpoint)
+        staleEndpoints.push((subs as SubRow[])[i].endpoint)
       } else {
         errors.push(String(result.reason))
       }
@@ -76,5 +78,5 @@ export async function sendPushToAll(payload: PushPayload) {
   const { data: users } = await supabase.from('profiles').select('id')
   if (!users) return
 
-  await Promise.allSettled(users.map((u) => sendPushToUser(u.id, payload)))
+  await Promise.allSettled((users as { id: string }[]).map((u) => sendPushToUser(u.id, payload)))
 }
