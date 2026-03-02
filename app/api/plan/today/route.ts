@@ -3,12 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import { TodayResponse } from '@/lib/types'
 import { format } from 'date-fns'
 
-export async function GET() {
+export async function GET(req: Request) {
   const supabase = await createClient()
   const { data: { user }, error: authErr } = await supabase.auth.getUser()
   if (authErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const today = format(new Date(), 'yyyy-MM-dd')
+  // Use client-supplied date to avoid UTC vs local-timezone mismatch on Vercel
+  const { searchParams } = new URL(req.url)
+  const today = searchParams.get('date') ?? format(new Date(), 'yyyy-MM-dd')
 
   // Plan + blocks
   const { data: plan } = await supabase

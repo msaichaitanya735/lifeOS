@@ -82,7 +82,8 @@ export default function FocusPage() {
   const refreshRef              = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchToday = useCallback(async () => {
-    const res = await fetch('/api/plan/today')
+    const date = format(new Date(), 'yyyy-MM-dd')
+    const res = await fetch(`/api/plan/today?date=${date}`)
     if (res.ok) setData(await res.json())
     setLoading(false)
   }, [])

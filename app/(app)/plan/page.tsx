@@ -64,7 +64,7 @@ export default function PlanPage() {
     setBlocks([])
     setIntention('')
 
-    fetch('/api/plan/today')
+    fetch(`/api/plan/today?date=${date}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.plan?.intention) setIntention(d.plan.intention)
