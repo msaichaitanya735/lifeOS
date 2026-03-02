@@ -51,31 +51,38 @@ function durationLabel(start: string, end: string) {
 export default function PlanPage() {
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [intention, setIntention] = useState('')
-  const [blocks, setBlocks] = useState<CreateBlockPayload[]>(DEFAULT_BLOCKS)
+  const [blocks, setBlocks] = useState<CreateBlockPayload[]>([])
+  const [planLoading, setPlanLoading] = useState(true)
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
-  // Load today's existing plan
+  // Load existing plan for the selected date
   useEffect(() => {
-    if (date === format(new Date(), 'yyyy-MM-dd')) {
-      fetch('/api/plan/today')
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.plan) setIntention(d.plan.intention ?? '')
-          if (d.blocks?.length) {
-            setBlocks(d.blocks.map((b: { start_time: string; end_time: string; category: Category; title: string; notes?: string }) => ({
-              start_time: b.start_time.slice(0, 5),
-              end_time:   b.end_time.slice(0, 5),
-              category:   b.category,
-              title:      b.title,
-              notes:      b.notes,
-            })))
-          }
-        })
-        .catch(() => {})
-    }
+    setPlanLoading(true)
+    setBlocks([])
+    setIntention('')
+
+    fetch('/api/plan/today')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.plan?.intention) setIntention(d.plan.intention)
+        if (d.blocks?.length) {
+          setBlocks(d.blocks.map((b: { start_time: string; end_time: string; category: Category; title: string; notes?: string }) => ({
+            start_time: b.start_time.slice(0, 5),
+            end_time:   b.end_time.slice(0, 5),
+            category:   b.category,
+            title:      b.title,
+            notes:      b.notes,
+          })))
+        } else {
+          // No plan yet — pre-fill with smart defaults
+          setBlocks(DEFAULT_BLOCKS)
+        }
+      })
+      .catch(() => { setBlocks(DEFAULT_BLOCKS) })
+      .finally(() => setPlanLoading(false))
   }, [date])
 
   function addBlock() {
@@ -157,7 +164,14 @@ export default function PlanPage() {
 
       {/* ── Timeline ── */}
       <div className="px-5 space-y-0">
-        {blocks.map((block, i) => (
+        {planLoading && (
+          <div className="space-y-4 py-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 rounded-2xl bg-gray-800 animate-pulse" />
+            ))}
+          </div>
+        )}
+        {!planLoading && blocks.map((block, i) => (
           <BlockCard
             key={i}
             block={block}
