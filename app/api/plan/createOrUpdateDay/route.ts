@@ -17,7 +17,10 @@ export async function POST(req: NextRequest) {
   // Upsert the daily plan
   const { data: plan, error: planErr } = await supabase
     .from('daily_plans')
-    .upsert({ user_id: user.id, date, intention: intention ?? null, committed: true })
+    .upsert(
+      { user_id: user.id, date, intention: intention ?? null, committed: true },
+      { onConflict: 'user_id,date' }
+    )
     .select()
     .single()
 
