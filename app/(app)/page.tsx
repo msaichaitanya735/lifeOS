@@ -80,11 +80,15 @@ export default function FocusPage() {
   const [loading, setLoading]   = useState(true)
   const [acting, setActing]     = useState<string | null>(null)
   const [showDone, setShowDone] = useState(false)
-  const refreshRef              = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [reflectionDone, setReflectionDone] = useState<boolean | null>(null)
+  const refreshRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const date = format(new Date(), 'yyyy-MM-dd')
+  const hour = new Date().getHours()
 
   const fetchToday = useCallback(async () => {
-    const date = format(new Date(), 'yyyy-MM-dd')
-    const res = await fetch(`/api/plan/today?date=${date}`)
+    const d = format(new Date(), 'yyyy-MM-dd')
+    const res = await fetch(`/api/plan/today?date=${d}`)
     if (res.ok) setData(await res.json())
     setLoading(false)
   }, [])
@@ -95,6 +99,15 @@ export default function FocusPage() {
     refreshRef.current = setInterval(fetchToday, 60_000)
     return () => { if (refreshRef.current) clearInterval(refreshRef.current) }
   }, [fetchToday])
+
+  // EOD reflection check — only after 6 PM
+  useEffect(() => {
+    if (hour < 18) { setReflectionDone(true); return }
+    fetch(`/api/reflect/today?date=${date}`)
+      .then((r) => r.json())
+      .then((d) => setReflectionDone(!!d.reflection))
+      .catch(() => setReflectionDone(true))
+  }, [date, hour])
 
   async function act(endpoint: string, body: object) {
     const res = await fetch(endpoint, {
@@ -118,18 +131,6 @@ export default function FocusPage() {
   const blocks = data?.blocks ?? []
   const nowStr = format(new Date(), 'HH:mm')
   const p      = data?.progress
-  const date   = format(new Date(), 'yyyy-MM-dd')
-
-  // Show EOD prompt after 6 PM if reflection not yet done
-  const [reflectionDone, setReflectionDone] = useState<boolean | null>(null)
-  const hour = new Date().getHours()
-  useEffect(() => {
-    if (hour < 18) { setReflectionDone(true); return }  // Before 6 PM — hide prompt
-    fetch(`/api/reflect/today?date=${date}`)
-      .then((r) => r.json())
-      .then((d) => setReflectionDone(!!d.reflection))
-      .catch(() => setReflectionDone(true))
-  }, [date, hour])
 
   const { current, upcoming, finished } = classifyBlocks(blocks, nowStr)
 
