@@ -4,13 +4,14 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { format, parse, isWithinInterval, differenceInSeconds, differenceInMinutes } from 'date-fns'
 import {
   CheckCircle2, Circle, SkipForward, PlayCircle, RefreshCw,
-  ChevronDown, Timer, AlertCircle, Bell,
+  ChevronDown, Timer, AlertCircle, Bell, BookOpenCheck,
 } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import { TodayResponse, PlanBlock } from '@/lib/types'
 import { clsx } from 'clsx'
+import Link from 'next/link'
 
 // ── Timer hook — ticks every second ──────────────────────────────────────────
 function useLiveSeconds(isoTimestamp: string | null): number {
@@ -117,6 +118,18 @@ export default function FocusPage() {
   const blocks = data?.blocks ?? []
   const nowStr = format(new Date(), 'HH:mm')
   const p      = data?.progress
+  const date   = format(new Date(), 'yyyy-MM-dd')
+
+  // Show EOD prompt after 6 PM if reflection not yet done
+  const [reflectionDone, setReflectionDone] = useState<boolean | null>(null)
+  const hour = new Date().getHours()
+  useEffect(() => {
+    if (hour < 18) { setReflectionDone(true); return }  // Before 6 PM — hide prompt
+    fetch(`/api/reflect/today?date=${date}`)
+      .then((r) => r.json())
+      .then((d) => setReflectionDone(!!d.reflection))
+      .catch(() => setReflectionDone(true))
+  }, [date, hour])
 
   const { current, upcoming, finished } = classifyBlocks(blocks, nowStr)
 
@@ -215,6 +228,20 @@ export default function FocusPage() {
             End
           </Button>
         </Card>
+      )}
+
+      {/* EOD Reflection prompt */}
+      {reflectionDone === false && (
+        <Link href={`/reflect?date=${date}`}>
+          <Card className="flex items-center gap-4 border-indigo-700/60 bg-indigo-900/20 ring-2 ring-indigo-500/30 cursor-pointer hover:ring-indigo-500/60 transition-all">
+            <BookOpenCheck size={24} className="text-indigo-400 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-white">Reflect on your day</p>
+              <p className="text-xs text-indigo-300 mt-0.5">Close the loop — 2 minutes to review what you accomplished</p>
+            </div>
+            <ChevronDown size={16} className="text-gray-500 -rotate-90 shrink-0" />
+          </Card>
+        </Link>
       )}
 
       {/* Done / past blocks */}

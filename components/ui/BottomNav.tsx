@@ -2,15 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, CalendarDays, ClipboardList, BarChart2, Settings } from 'lucide-react'
+import { Home, CalendarDays, BookOpenCheck, BarChart2, Settings } from 'lucide-react'
 import { clsx } from 'clsx'
 
 const NAV_ITEMS = [
-  { href: '/',         label: 'Focus',    Icon: Home },
-  { href: '/plan',     label: 'Plan',     Icon: CalendarDays },
-  { href: '/log',      label: 'Log',      Icon: ClipboardList },
-  { href: '/stats',    label: 'Stats',    Icon: BarChart2 },
-  { href: '/settings', label: 'Settings', Icon: Settings },
+  { href: '/',         label: 'Focus',   Icon: Home },
+  { href: '/plan',     label: 'Plan',    Icon: CalendarDays },
+  { href: '/reflect',  label: 'Reflect', Icon: BookOpenCheck },
+  { href: '/stats',    label: 'Stats',   Icon: BarChart2 },
+  { href: '/settings', label: 'Settings',Icon: Settings },
 ]
 
 export default function BottomNav() {
