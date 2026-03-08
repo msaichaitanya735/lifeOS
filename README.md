@@ -1,8 +1,9 @@
 # LifeOS
 
-A production-ready, mobile-first PWA to help a single user maintain daily discipline across four domains: **job hunting**, **LeetCode**, **skills/learning**, and **gym**.
+Production PWA for personal discipline — Next.js 15, Supabase, Trigger.dev scheduled jobs, VAPID push notifications. AI layer in active development.
 
 ---
+
 
 ## Stack
 
